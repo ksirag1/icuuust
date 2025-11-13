@@ -1,24 +1,43 @@
 # UUST IUM Interactive Map - TODO
 
-## Core Features
-- [x] Campus map with restricted bounds (Leaflet.js)
-- [x] Building markers for all 9 buildings
-- [x] Campus zoom/pan with boundary enforcement
-- [x] Building click handler to switch to building view
-- [x] Building interior maps (empty placeholders)
-- [x] Floor selector for building views
-- [x] Room/auditorium selection UI (placeholder)
+## Phase 1: Authentication & Authorization
+- [x] User authentication system (login/password)
+- [x] Admin role assignment
+- [x] User role assignment
+- [x] Protected routes based on roles
+- [x] Login page UI
 
-## Admin Features (Optional)
-- [ ] Admin panel for adding buildings
-- [ ] Admin panel for adding rooms/auditoriums
-- [ ] Admin panel for adding walls/stairs
-- [ ] Admin panel for managing building layouts
+## Phase 2: Polygon Editor
+- [ ] Polygon editing mode on campus map
+- [ ] Draggable vertices for each polygon
+- [ ] Real-time coordinate updates
+- [ ] Save/cancel polygon changes
+- [ ] Visual feedback for editing mode
 
-## Documentation & Presentation
-- [ ] Verify presentation accuracy (Flutter vs Leaflet.js)
-- [x] Prepare demo for presentation
-- [ ] Create user guide/instructions
+## Phase 3: Building Constructor (Admin)
+- [ ] Building layout canvas with grid
+- [ ] Add room/auditorium elements
+- [ ] Add stairs/corridors
+- [ ] Add toilets/utilities
+- [ ] Element sizing and positioning
+- [ ] Element naming and numbering
+- [ ] Element type selection
+- [ ] Save building layout to database
+- [ ] Edit existing building layouts
+
+## Phase 4: Building View (User)
+- [ ] Display building floor plan
+- [ ] Show room names and numbers
+- [ ] Room selection and details
+- [ ] Floor navigation
+- [ ] Search for specific rooms
+
+## Phase 5: Testing & Deployment
+- [ ] Test admin workflow
+- [ ] Test user workflow
+- [ ] Test polygon editing
+- [ ] Performance testing
+- [ ] Cross-browser testing
 
 ## Completed
 - [x] Project initialization

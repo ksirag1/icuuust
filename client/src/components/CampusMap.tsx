@@ -213,9 +213,10 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect }) => {
 interface BuildingMapProps {
   buildingId: number;
   onBack: () => void;
+  isAdmin?: boolean;
 }
 
-export const BuildingMap: React.FC<BuildingMapProps> = ({ buildingId, onBack }) => {
+export const BuildingMap: React.FC<BuildingMapProps> = ({ buildingId, onBack, isAdmin = false }) => {
   const building = BUILDINGS.find((b) => b.id === buildingId);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
