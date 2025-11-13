@@ -18,8 +18,15 @@ interface Element {
   floor: number;
 }
 
-// Building coordinates (latitude, longitude)
-const BUILDINGS = [
+interface Building {
+  id: number;
+  name: string;
+  center: [number, number];
+  bounds: [number, number][];
+}
+
+// Initial building coordinates
+const INITIAL_BUILDINGS: Building[] = [
   {
     id: 1,
     name: 'Building 1',
@@ -188,6 +195,8 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect, isAdmin 
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const buildingMarkers = useRef<Map<number, L.Marker>>(new Map());
+  const polygons = useRef<Map<number, L.Polygon>>(new Map());
+  const [buildings, setBuildings] = useState<Building[]>(INITIAL_BUILDINGS);
   const [editingPolygonBuildingId, setEditingPolygonBuildingId] = useState<number | null>(null);
   const [viewingBuildingId, setViewingBuildingId] = useState<number | null>(null);
 
@@ -210,6 +219,21 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect, isAdmin 
       maxZoom: 20,
     }).addTo(map.current);
 
+    return () => {
+      map.current?.remove();
+    };
+  }, []);
+
+  // Update map when buildings change
+  useEffect(() => {
+    if (!map.current) return;
+
+    // Clear existing markers and polygons
+    buildingMarkers.current.forEach((marker) => marker.remove());
+    polygons.current.forEach((polygon) => polygon.remove());
+    buildingMarkers.current.clear();
+    polygons.current.clear();
+
     // Create custom icon for buildings
     const buildingIcon = L.icon({
       iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSI0IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iMjAiIGZpbGw9IiMzYjgyZjYiIHJ4PSIyIi8+PHJlY3QgeD0iNiIgeT0iMTAiIHdpZHRoPSI1IiBoZWlnaHQ9IjUiIGZpbGw9IiNmZmYiIG9wYWNpdHk9IjAuNiIvPjxyZWN0IHg9IjEzIiB5PSIxMCIgd2lkdGg9IjUiIGhlaWdodD0iNSIgZmlsbD0iI2ZmZiIgb3BhY2l0eT0iMC42Ii8+PHJlY3QgeD0iMjAiIHk9IjEwIiB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjYiLz48cmVjdCB4PSI2IiB5PSIxNyIgd2lkdGg9IjUiIGhlaWdodD0iNSIgZmlsbD0iI2ZmZiIgb3BhY2l0eT0iMC42Ii8+PHJlY3QgeD0iMTMiIHk9IjE3IiB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjYiLz48cmVjdCB4PSIyMCIgeT0iMTciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiIGZpbGw9IiNmZmYiIG9wYWNpdHk9IjAuNiIvPjwvc3ZnPg==',
@@ -218,8 +242,8 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect, isAdmin 
       popupAnchor: [0, -32],
     });
 
-    // Add building markers
-    BUILDINGS.forEach((building) => {
+    // Add building markers and polygons
+    buildings.forEach((building) => {
       const marker = L.marker(building.center as [number, number], {
         icon: buildingIcon,
         title: building.name,
@@ -232,10 +256,8 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect, isAdmin 
       });
 
       buildingMarkers.current.set(building.id, marker);
-    });
 
-    // Draw building polygons
-    BUILDINGS.forEach((building) => {
+      // Draw building polygons
       if (building.bounds.length > 0) {
         const polygon = L.polygon(building.bounds as L.LatLngExpression[], {
           color: '#3b82f6',
@@ -248,17 +270,15 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect, isAdmin 
         polygon.on('click', () => {
           setViewingBuildingId(building.id);
         });
+
+        polygons.current.set(building.id, polygon);
       }
     });
-
-    return () => {
-      map.current?.remove();
-    };
-  }, [isAdmin]);
+  }, [buildings, isAdmin]);
 
   // Polygon editor mode
   if (editingPolygonBuildingId !== null && isAdmin) {
-    const building = BUILDINGS.find((b) => b.id === editingPolygonBuildingId);
+    const building = buildings.find((b) => b.id === editingPolygonBuildingId);
     if (building) {
       return (
         <PolygonEditor
@@ -266,7 +286,12 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect, isAdmin 
           buildingName={building.name}
           initialCoordinates={building.bounds as [number, number][]}
           onSave={(coords) => {
-            console.log('Saved coordinates:', coords);
+            // Update building with new coordinates
+            setBuildings(
+              buildings.map((b) =>
+                b.id === building.id ? { ...b, bounds: coords } : b
+              )
+            );
             setEditingPolygonBuildingId(null);
           }}
           onCancel={() => setEditingPolygonBuildingId(null)}
@@ -277,7 +302,7 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect, isAdmin 
 
   // Building view mode (admin or user)
   if (viewingBuildingId !== null) {
-    const building = BUILDINGS.find((b) => b.id === viewingBuildingId);
+    const building = buildings.find((b) => b.id === viewingBuildingId);
     if (building) {
       return (
         <BuildingView
@@ -308,7 +333,7 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect, isAdmin 
 };
 
 interface BuildingViewProps {
-  building: (typeof BUILDINGS)[0];
+  building: Building;
   isAdmin: boolean;
   onBack: () => void;
   onEditPolygon: () => void;

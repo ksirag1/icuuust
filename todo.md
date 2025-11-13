@@ -54,3 +54,6 @@
 - [x] Add stair visualization - make stairs look like actual stairs (diagonal pattern)
 - [ ] Persist building layouts to database
 - [x] Display saved layouts for users
+
+## Current Issues
+- [x] Fix white screen after polygon editor save - map now reloads/updates with new coordinates
