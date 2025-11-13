@@ -64,3 +64,10 @@
 - [x] Update app name to "ИКУ УУНИТ"
 - [x] Apply brand colors (light blue #B8D4E8 and dark blue #1B4965)
 - [x] Add logo to header
+
+
+## Presentation & Deployment
+- [x] Review updated presentation
+- [x] Prepare presentation speech (~5 minutes, divided among 3 people)
+- [x] Prepare GitHub upload instructions
+- [x] Create README.md and documentation
