@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@uust.edu');
+  const [password, setPassword] = useState('password123');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
@@ -24,10 +24,10 @@ export default function Login() {
         localStorage.setItem('userEmail', email);
         setLocation('/');
       } else {
-        setError('Invalid email or password');
+        setError('Неверный email или пароль');
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError('Произошла ошибка. Попробуйте еще раз.');
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -35,39 +35,42 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">UUST IUM Map</h1>
-          <p className="text-gray-600">Interactive University Map</p>
+    <div className="min-h-screen bg-gradient-to-br from-[#B8D4E8] to-[#1B4965] flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
+        {/* Logo and Title */}
+        <div className="text-center mb-8">
+          <img src="/logo.png" alt="ИКУ УУНИТ" className="h-12 w-12 mx-auto mb-4" />
+          <h1 className="text-3xl font-bold text-[#1B4965] mb-2">ИКУ УУНИТ</h1>
+          <p className="text-gray-600">Умная навигация по университету</p>
         </div>
 
+        {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Email
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@uust.edu"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1B4965] focus:border-transparent"
+              placeholder="your@email.com"
+              disabled={isLoading}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Пароль
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1B4965] focus:border-transparent"
               placeholder="••••••••"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-              required
+              disabled={isLoading}
             />
           </div>
 
@@ -80,16 +83,23 @@ export default function Login() {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition"
+            className="w-full bg-[#1B4965] hover:bg-[#0d2a3f] text-white font-semibold py-2 rounded-lg transition"
           >
-            {isLoading ? 'Logging in...' : 'Login'}
+            {isLoading ? 'Загрузка...' : 'Вход'}
           </Button>
         </form>
 
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg text-sm text-gray-700">
-          <p className="font-semibold mb-2">Demo Credentials:</p>
-          <p>Admin: admin@uust.edu / password123</p>
-          <p>User: user@uust.edu / password123</p>
+        {/* Demo Credentials */}
+        <div className="mt-6 p-4 bg-[#B8D4E8] rounded-lg">
+          <p className="text-sm font-semibold text-[#1B4965] mb-2">Демо учетные данные:</p>
+          <div className="space-y-1 text-xs text-[#1B4965]">
+            <p>
+              <strong>Администратор:</strong> admin@uust.edu / password123
+            </p>
+            <p>
+              <strong>Пользователь:</strong> user@uust.edu / password123
+            </p>
+          </div>
         </div>
       </div>
     </div>

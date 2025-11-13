@@ -29,7 +29,7 @@ interface Building {
 const INITIAL_BUILDINGS: Building[] = [
   {
     id: 1,
-    name: 'Building 1',
+    name: 'Корпус 1',
     center: [54.724380444948956, 55.942002948239704],
     bounds: [
       [54.724380444948956, 55.942002948239704],
@@ -40,7 +40,7 @@ const INITIAL_BUILDINGS: Building[] = [
   },
   {
     id: 2,
-    name: 'Building 2',
+    name: 'Корпус 2',
     center: [54.72414036513734, 55.942659939326916],
     bounds: [
       [54.72414036513734, 55.942659939326916],
@@ -55,7 +55,7 @@ const INITIAL_BUILDINGS: Building[] = [
   },
   {
     id: 3,
-    name: 'Building 3',
+    name: 'Корпус 3',
     center: [54.723436349476145, 55.9423219101881],
     bounds: [
       [54.723436349476145, 55.9423219101881],
@@ -68,7 +68,7 @@ const INITIAL_BUILDINGS: Building[] = [
   },
   {
     id: 4,
-    name: 'Building 4',
+    name: 'Корпус 4',
     center: [54.72372682414613, 55.94070700093012],
     bounds: [
       [54.72372682414613, 55.94070700093012],
@@ -83,7 +83,7 @@ const INITIAL_BUILDINGS: Building[] = [
   },
   {
     id: 5,
-    name: 'Building 5',
+    name: 'Корпус 5',
     center: [54.72379325528604, 55.94018373425545],
     bounds: [
       [54.72379325528604, 55.94018373425545],
@@ -94,7 +94,7 @@ const INITIAL_BUILDINGS: Building[] = [
   },
   {
     id: 6,
-    name: 'Building 6',
+    name: 'Корпус 6',
     center: [54.72424394207344, 55.940745343761485],
     bounds: [
       [54.72424394207344, 55.940745343761485],
@@ -107,7 +107,7 @@ const INITIAL_BUILDINGS: Building[] = [
   },
   {
     id: 7,
-    name: 'Building 7',
+    name: 'Корпус 7',
     center: [54.72527241033724, 55.941543432471406],
     bounds: [
       [54.72527241033724, 55.941543432471406],
@@ -120,7 +120,7 @@ const INITIAL_BUILDINGS: Building[] = [
   },
   {
     id: 8,
-    name: 'Building 8',
+    name: 'Корпус 8',
     center: [54.7255, 55.9420],
     bounds: [
       [54.7255, 55.9420],
@@ -131,7 +131,7 @@ const INITIAL_BUILDINGS: Building[] = [
   },
   {
     id: 9,
-    name: 'Building 9',
+    name: 'Корпус 9',
     center: [54.7260, 55.9425],
     bounds: [
       [54.7260, 55.9425],
@@ -155,7 +155,7 @@ const buildingLayouts: Record<number, Element[]> = {
   1: [
     {
       id: '1',
-      name: 'Room 101',
+      name: 'Кабинет 101',
       type: 'room',
       x: 50,
       y: 50,
@@ -165,7 +165,7 @@ const buildingLayouts: Record<number, Element[]> = {
     },
     {
       id: '2',
-      name: 'Stairs',
+      name: 'Лестница',
       type: 'stairs',
       x: 200,
       y: 100,
@@ -175,7 +175,7 @@ const buildingLayouts: Record<number, Element[]> = {
     },
     {
       id: '3',
-      name: 'Auditorium 102',
+      name: 'Аудитория 102',
       type: 'auditorium',
       x: 350,
       y: 50,
@@ -184,6 +184,29 @@ const buildingLayouts: Record<number, Element[]> = {
       floor: 1,
     },
   ],
+};
+
+// Storage functions
+const STORAGE_KEY = 'iku_uunit_buildings';
+
+const loadBuildingsFromStorage = (): Building[] => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error('Failed to load buildings from storage:', e);
+  }
+  return INITIAL_BUILDINGS;
+};
+
+const saveBuildingsToStorage = (buildings: Building[]) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(buildings));
+  } catch (e) {
+    console.error('Failed to save buildings to storage:', e);
+  }
 };
 
 interface CampusMapProps {
@@ -196,9 +219,14 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect, isAdmin 
   const map = useRef<L.Map | null>(null);
   const buildingMarkers = useRef<Map<number, L.Marker>>(new Map());
   const polygons = useRef<Map<number, L.Polygon>>(new Map());
-  const [buildings, setBuildings] = useState<Building[]>(INITIAL_BUILDINGS);
+  const [buildings, setBuildings] = useState<Building[]>(() => loadBuildingsFromStorage());
   const [editingPolygonBuildingId, setEditingPolygonBuildingId] = useState<number | null>(null);
   const [viewingBuildingId, setViewingBuildingId] = useState<number | null>(null);
+
+  // Save buildings to localStorage whenever they change
+  useEffect(() => {
+    saveBuildingsToStorage(buildings);
+  }, [buildings]);
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -236,7 +264,7 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect, isAdmin 
 
     // Create custom icon for buildings
     const buildingIcon = L.icon({
-      iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSI0IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iMjAiIGZpbGw9IiMzYjgyZjYiIHJ4PSIyIi8+PHJlY3QgeD0iNiIgeT0iMTAiIHdpZHRoPSI1IiBoZWlnaHQ9IjUiIGZpbGw9IiNmZmYiIG9wYWNpdHk9IjAuNiIvPjxyZWN0IHg9IjEzIiB5PSIxMCIgd2lkdGg9IjUiIGhlaWdodD0iNSIgZmlsbD0iI2ZmZiIgb3BhY2l0eT0iMC42Ii8+PHJlY3QgeD0iMjAiIHk9IjEwIiB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjYiLz48cmVjdCB4PSI2IiB5PSIxNyIgd2lkdGg9IjUiIGhlaWdodD0iNSIgZmlsbD0iI2ZmZiIgb3BhY2l0eT0iMC42Ii8+PHJlY3QgeD0iMTMiIHk9IjE3IiB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjYiLz48cmVjdCB4PSIyMCIgeT0iMTciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiIGZpbGw9IiNmZmYiIG9wYWNpdHk9IjAuNiIvPjwvc3ZnPg==',
+      iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSI0IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iMjAiIGZpbGw9IiMxQjQ5NjUiIHJ4PSIyIi8+PHJlY3QgeD0iNiIgeT0iMTAiIHdpZHRoPSI1IiBoZWlnaHQ9IjUiIGZpbGw9IiNmZmYiIG9wYWNpdHk9IjAuNiIvPjxyZWN0IHg9IjEzIiB5PSIxMCIgd2lkdGg9IjUiIGhlaWdodD0iNSIgZmlsbD0iI2ZmZiIgb3BhY2l0eT0iMC42Ii8+PHJlY3QgeD0iMjAiIHk9IjEwIiB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjYiLz48cmVjdCB4PSI2IiB5PSIxNyIgd2lkdGg9IjUiIGhlaWdodD0iNSIgZmlsbD0iI2ZmZiIgb3BhY2l0eT0iMC42Ii8+PHJlY3QgeD0iMTMiIHk9IjE3IiB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjYiLz48cmVjdCB4PSIyMCIgeT0iMTciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiIGZpbGw9IiNmZmYiIG9wYWNpdHk9IjAuNiIvPjwvc3ZnPg==',
       iconSize: [32, 32],
       iconAnchor: [16, 32],
       popupAnchor: [0, -32],
@@ -248,7 +276,7 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect, isAdmin 
         icon: buildingIcon,
         title: building.name,
       })
-        .bindPopup(`<strong>${building.name}</strong><br/><small>Click to ${isAdmin ? 'edit' : 'view'}</small>`)
+        .bindPopup(`<strong>${building.name}</strong><br/><small>Нажмите для ${isAdmin ? 'редактирования' : 'просмотра'}</small>`)
         .addTo(map.current!);
 
       marker.on('click', () => {
@@ -260,7 +288,7 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect, isAdmin 
       // Draw building polygons
       if (building.bounds.length > 0) {
         const polygon = L.polygon(building.bounds as L.LatLngExpression[], {
-          color: '#3b82f6',
+          color: '#1B4965',
           weight: 2,
           opacity: 0.7,
           fillOpacity: 0.15,
@@ -323,9 +351,9 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect, isAdmin 
     <div className="w-full h-full relative">
       <div ref={mapContainer} className="w-full h-full" />
       {isAdmin && (
-        <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-3 text-sm text-gray-700 max-w-xs">
-          <p className="font-semibold mb-2">Admin Mode</p>
-          <p>Click on a building to edit or view its layout</p>
+        <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-3 text-sm text-gray-700 max-w-xs border-l-4 border-[#1B4965]">
+          <p className="font-semibold mb-2 text-[#1B4965]">Режим администратора</p>
+          <p>Нажмите на корпус для редактирования или просмотра макета</p>
         </div>
       )}
     </div>
@@ -365,20 +393,20 @@ const BuildingView: React.FC<BuildingViewProps> = ({
   }
 
   return (
-    <div className="w-full h-full flex flex-col bg-gray-50">
+    <div className="w-full h-full flex flex-col bg-[#B8D4E8]">
       {/* Header */}
-      <div className="bg-white border-b p-4 shadow-sm flex items-center justify-between">
+      <div className="bg-white border-b p-4 shadow-sm flex items-center justify-between border-b-4 border-[#1B4965]">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={onBack}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 hover:bg-[#B8D4E8]"
           >
             <ChevronLeft className="w-4 h-4" />
-            Back to Campus
+            На карту кампуса
           </Button>
-          <h2 className="text-lg font-semibold text-gray-800">{building.name}</h2>
+          <h2 className="text-lg font-semibold text-[#1B4965]">{building.name}</h2>
         </div>
         {isAdmin && (
           <div className="flex gap-2">
@@ -386,17 +414,17 @@ const BuildingView: React.FC<BuildingViewProps> = ({
               size="sm"
               variant="outline"
               onClick={onEditPolygon}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 border-[#1B4965] text-[#1B4965] hover:bg-[#B8D4E8]"
             >
-              Edit Polygon
+              Редактировать границы
             </Button>
             <Button
               size="sm"
               onClick={() => setShowConstructor(true)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-[#1B4965] hover:bg-[#0d2a3f]"
             >
               <Edit2 className="w-4 h-4" />
-              Edit Layout
+              Редактировать макет
             </Button>
           </div>
         )}
@@ -413,10 +441,13 @@ const BuildingView: React.FC<BuildingViewProps> = ({
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-white">
             <div className="text-center">
-              <p className="text-gray-500 mb-4">No floor plan created yet</p>
+              <p className="text-gray-500 mb-4">Макет этажа еще не создан</p>
               {isAdmin && (
-                <Button onClick={() => setShowConstructor(true)}>
-                  Create Floor Plan
+                <Button
+                  onClick={() => setShowConstructor(true)}
+                  className="bg-[#1B4965] hover:bg-[#0d2a3f]"
+                >
+                  Создать макет
                 </Button>
               )}
             </div>
