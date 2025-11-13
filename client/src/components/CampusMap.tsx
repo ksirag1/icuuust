@@ -5,6 +5,18 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, Edit2 } from 'lucide-react';
 import { PolygonEditor } from './PolygonEditor';
 import { BuildingConstructor } from './BuildingConstructor';
+import { FloorPlanViewer } from './FloorPlanViewer';
+
+interface Element {
+  id: string;
+  name: string;
+  type: 'room' | 'auditorium' | 'stairs' | 'corridor' | 'toilet' | 'utility' | 'office';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  floor: number;
+}
 
 // Building coordinates (latitude, longitude)
 const BUILDINGS = [
@@ -131,6 +143,42 @@ const CAMPUS_BOUNDS = L.latLngBounds(
 
 const CAMPUS_CENTER = [54.7247, 55.9430] as [number, number];
 
+// Mock storage for building layouts
+const buildingLayouts: Record<number, Element[]> = {
+  1: [
+    {
+      id: '1',
+      name: 'Room 101',
+      type: 'room',
+      x: 50,
+      y: 50,
+      width: 100,
+      height: 80,
+      floor: 1,
+    },
+    {
+      id: '2',
+      name: 'Stairs',
+      type: 'stairs',
+      x: 200,
+      y: 100,
+      width: 60,
+      height: 80,
+      floor: 1,
+    },
+    {
+      id: '3',
+      name: 'Auditorium 102',
+      type: 'auditorium',
+      x: 350,
+      y: 50,
+      width: 150,
+      height: 120,
+      floor: 1,
+    },
+  ],
+};
+
 interface CampusMapProps {
   onBuildingSelect?: (buildingId: number) => void;
   isAdmin?: boolean;
@@ -140,7 +188,8 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect, isAdmin 
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const buildingMarkers = useRef<Map<number, L.Marker>>(new Map());
-  const [editingBuildingId, setEditingBuildingId] = useState<number | null>(null);
+  const [editingPolygonBuildingId, setEditingPolygonBuildingId] = useState<number | null>(null);
+  const [viewingBuildingId, setViewingBuildingId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -175,21 +224,17 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect, isAdmin 
         icon: buildingIcon,
         title: building.name,
       })
-        .bindPopup(`<strong>${building.name}</strong><br/><small>Click to view details</small>`)
+        .bindPopup(`<strong>${building.name}</strong><br/><small>Click to ${isAdmin ? 'edit' : 'view'}</small>`)
         .addTo(map.current!);
 
       marker.on('click', () => {
-        if (isAdmin) {
-          setEditingBuildingId(building.id);
-        } else {
-          onBuildingSelect?.(building.id);
-        }
+        setViewingBuildingId(building.id);
       });
 
       buildingMarkers.current.set(building.id, marker);
     });
 
-    // Draw building polygons (optional visual aid)
+    // Draw building polygons
     BUILDINGS.forEach((building) => {
       if (building.bounds.length > 0) {
         const polygon = L.polygon(building.bounds as L.LatLngExpression[], {
@@ -201,11 +246,7 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect, isAdmin 
 
         // Add click handler to polygon
         polygon.on('click', () => {
-          if (isAdmin) {
-            setEditingBuildingId(building.id);
-          } else {
-            onBuildingSelect?.(building.id);
-          }
+          setViewingBuildingId(building.id);
         });
       }
     });
@@ -213,109 +254,95 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect, isAdmin 
     return () => {
       map.current?.remove();
     };
-  }, [onBuildingSelect, isAdmin]);
+  }, [isAdmin]);
 
-  if (editingBuildingId !== null && isAdmin) {
-    const building = BUILDINGS.find((b) => b.id === editingBuildingId);
+  // Polygon editor mode
+  if (editingPolygonBuildingId !== null && isAdmin) {
+    const building = BUILDINGS.find((b) => b.id === editingPolygonBuildingId);
     if (building) {
       return (
-        <BuildingConstructor
+        <PolygonEditor
           buildingId={building.id}
           buildingName={building.name}
-          onClose={() => setEditingBuildingId(null)}
+          initialCoordinates={building.bounds as [number, number][]}
+          onSave={(coords) => {
+            console.log('Saved coordinates:', coords);
+            setEditingPolygonBuildingId(null);
+          }}
+          onCancel={() => setEditingPolygonBuildingId(null)}
         />
       );
     }
   }
 
+  // Building view mode (admin or user)
+  if (viewingBuildingId !== null) {
+    const building = BUILDINGS.find((b) => b.id === viewingBuildingId);
+    if (building) {
+      return (
+        <BuildingView
+          building={building}
+          isAdmin={isAdmin}
+          onBack={() => setViewingBuildingId(null)}
+          onEditPolygon={() => {
+            setViewingBuildingId(null);
+            setEditingPolygonBuildingId(building.id);
+          }}
+        />
+      );
+    }
+  }
+
+  // Campus map view
   return (
     <div className="w-full h-full relative">
       <div ref={mapContainer} className="w-full h-full" />
       {isAdmin && (
         <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-3 text-sm text-gray-700 max-w-xs">
           <p className="font-semibold mb-2">Admin Mode</p>
-          <p>Click on a building to edit its layout</p>
+          <p>Click on a building to edit or view its layout</p>
         </div>
       )}
     </div>
   );
 };
 
-interface BuildingMapProps {
-  buildingId: number;
+interface BuildingViewProps {
+  building: (typeof BUILDINGS)[0];
+  isAdmin: boolean;
   onBack: () => void;
-  isAdmin?: boolean;
+  onEditPolygon: () => void;
 }
 
-export const BuildingMap: React.FC<BuildingMapProps> = ({ buildingId, onBack, isAdmin = false }) => {
-  const building = BUILDINGS.find((b) => b.id === buildingId);
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<L.Map | null>(null);
-  const [selectedFloor, setSelectedFloor] = useState(1);
-  const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
+const BuildingView: React.FC<BuildingViewProps> = ({
+  building,
+  isAdmin,
+  onBack,
+  onEditPolygon,
+}) => {
   const [showConstructor, setShowConstructor] = useState(false);
-
-  useEffect(() => {
-    if (!mapContainer.current || !building) return;
-
-    // Initialize map centered on the building
-    map.current = L.map(mapContainer.current, {
-      center: building.center as [number, number],
-      zoom: 19,
-      minZoom: 18,
-      maxZoom: 20,
-    });
-
-    // Add tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 20,
-    }).addTo(map.current);
-
-    // Draw building polygon with improved styling
-    if (building.bounds.length > 0) {
-      const polygon = L.polygon(building.bounds as L.LatLngExpression[], {
-        color: '#ef4444',
-        weight: 3,
-        opacity: 0.8,
-        fillOpacity: 0.25,
-      }).addTo(map.current);
-
-      // Add hover effect
-      polygon.on('mouseover', function (this: L.Polygon) {
-        this.setStyle({ fillOpacity: 0.4 });
-      });
-      polygon.on('mouseout', function (this: L.Polygon) {
-        this.setStyle({ fillOpacity: 0.25 });
-      });
-    }
-
-    return () => {
-      map.current?.remove();
-    };
-  }, [building]);
-
-  if (!building) {
-    return (
-      <div className="w-full h-full flex items-center justify-center">
-        <p>Building not found</p>
-      </div>
-    );
-  }
+  const [elements, setElements] = useState<Element[]>(buildingLayouts[building.id] || []);
 
   if (showConstructor && isAdmin) {
     return (
       <BuildingConstructor
         buildingId={building.id}
         buildingName={building.name}
+        initialElements={elements}
+        onSave={(newElements) => {
+          setElements(newElements);
+          buildingLayouts[building.id] = newElements;
+          setShowConstructor(false);
+        }}
         onClose={() => setShowConstructor(false)}
       />
     );
   }
 
   return (
-    <div className="w-full h-full flex flex-col">
-      <div className="bg-white border-b p-4 flex items-center justify-between shadow-sm">
+    <div className="w-full h-full flex flex-col bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b p-4 shadow-sm flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -329,85 +356,47 @@ export const BuildingMap: React.FC<BuildingMapProps> = ({ buildingId, onBack, is
           <h2 className="text-lg font-semibold text-gray-800">{building.name}</h2>
         </div>
         {isAdmin && (
-          <Button
-            size="sm"
-            onClick={() => setShowConstructor(true)}
-            className="flex items-center gap-2"
-          >
-            <Edit2 className="w-4 h-4" />
-            Edit Layout
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onEditPolygon}
+              className="flex items-center gap-2"
+            >
+              Edit Polygon
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => setShowConstructor(true)}
+              className="flex items-center gap-2"
+            >
+              <Edit2 className="w-4 h-4" />
+              Edit Layout
+            </Button>
+          </div>
         )}
       </div>
 
-      <div className="flex-1 flex">
-        <div className="flex-1">
-          <div ref={mapContainer} className="w-full h-full" />
-        </div>
-
-        <div className="w-56 bg-white border-l flex flex-col">
-          <div className="p-4 border-b">
-            <h3 className="font-semibold text-sm text-gray-700 mb-3">Select Floor</h3>
-            <div className="grid grid-cols-3 gap-2">
-              {[1, 2, 3, 4, 5].map((floor) => (
-                <Button
-                  key={floor}
-                  variant={selectedFloor === floor ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => {
-                    setSelectedFloor(floor);
-                    setSelectedRoom(null);
-                  }}
-                  className="text-xs font-semibold"
-                >
-                  {floor}
+      {/* Floor Plan Viewer */}
+      <div className="flex-1">
+        {elements.length > 0 ? (
+          <FloorPlanViewer
+            buildingName={building.name}
+            elements={elements}
+            onBack={onBack}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-white">
+            <div className="text-center">
+              <p className="text-gray-500 mb-4">No floor plan created yet</p>
+              {isAdmin && (
+                <Button onClick={() => setShowConstructor(true)}>
+                  Create Floor Plan
                 </Button>
-              ))}
+              )}
             </div>
           </div>
-
-          <div className="flex-1 overflow-y-auto p-4">
-            <h3 className="font-semibold text-sm text-gray-700 mb-3">
-              Floor {selectedFloor} Rooms
-            </h3>
-            <div className="space-y-2">
-              {[...Array(12)].map((_, i) => {
-                const roomId = i + 1;
-                const roomNumber = `${selectedFloor}${String(i + 1).padStart(2, '0')}`;
-                return (
-                  <div
-                    key={i}
-                    onClick={() => setSelectedRoom(roomId)}
-                    className={`p-3 rounded border-2 text-sm font-medium cursor-pointer transition-all ${
-                      selectedRoom === roomId
-                        ? 'bg-blue-50 border-blue-500 text-blue-900'
-                        : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300 hover:bg-blue-50'
-                    }`}
-                  >
-                    <div className="font-semibold">Room {roomNumber}</div>
-                    <div className="text-xs text-gray-500 mt-1">Auditorium</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {selectedRoom && (
-            <div className="p-4 border-t bg-blue-50">
-              <div className="text-xs text-gray-600 mb-2">Selected Room:</div>
-              <div className="font-bold text-lg text-blue-900">
-                {selectedFloor}{String(selectedRoom).padStart(2, '0')}
-              </div>
-              <Button
-                size="sm"
-                className="w-full mt-3"
-                onClick={() => setSelectedRoom(null)}
-              >
-                Clear Selection
-              </Button>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

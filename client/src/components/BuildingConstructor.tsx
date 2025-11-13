@@ -16,6 +16,8 @@ interface Element {
 interface BuildingConstructorProps {
   buildingId: number;
   buildingName: string;
+  initialElements?: Element[];
+  onSave: (elements: Element[]) => void;
   onClose: () => void;
 }
 
@@ -42,9 +44,11 @@ const ELEMENT_BORDERS: Record<Element['type'], string> = {
 export const BuildingConstructor: React.FC<BuildingConstructorProps> = ({
   buildingId,
   buildingName,
+  initialElements = [],
+  onSave,
   onClose,
 }) => {
-  const [elements, setElements] = useState<Element[]>([]);
+  const [elements, setElements] = useState<Element[]>(initialElements);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [currentFloor, setCurrentFloor] = useState(1);
   const [gridSize] = useState(20);
@@ -105,12 +109,54 @@ export const BuildingConstructor: React.FC<BuildingConstructorProps> = ({
   const currentElements = elements.filter((el) => el.floor === currentFloor);
 
   const handleSave = () => {
-    console.log('Saving building layout:', {
-      buildingId,
-      buildingName,
-      elements,
-    });
-    alert('Building layout saved! (Demo mode)');
+    onSave(elements);
+  };
+
+  const renderStairs = (x: number, y: number, width: number, height: number) => {
+    const steps = Math.min(Math.floor(width / 10), Math.floor(height / 10));
+    const stepWidth = width / steps;
+    const stepHeight = height / steps;
+
+    return (
+      <svg
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        className="absolute"
+        style={{ pointerEvents: 'none' }}
+      >
+        <rect width={width} height={height} fill={ELEMENT_COLORS.stairs} />
+        {Array.from({ length: steps }).map((_, i) => (
+          <g key={i}>
+            <line
+              x1={i * stepWidth}
+              y1={height}
+              x2={i * stepWidth}
+              y2={height - (i + 1) * stepHeight}
+              stroke={ELEMENT_BORDERS.stairs}
+              strokeWidth="2"
+            />
+            <line
+              x1={i * stepWidth}
+              y1={height - (i + 1) * stepHeight}
+              x2={(i + 1) * stepWidth}
+              y2={height - (i + 1) * stepHeight}
+              stroke={ELEMENT_BORDERS.stairs}
+              strokeWidth="2"
+            />
+          </g>
+        ))}
+        <rect
+          width={width}
+          height={height}
+          fill="none"
+          stroke={ELEMENT_BORDERS.stairs}
+          strokeWidth="2"
+        />
+      </svg>
+    );
   };
 
   return (
@@ -305,9 +351,11 @@ export const BuildingConstructor: React.FC<BuildingConstructorProps> = ({
                       borderColor: ELEMENT_BORDERS[el.type],
                     }}
                   >
-                    <span className="text-center px-1 break-words">
-                      {el.name}
-                    </span>
+                    {el.type === 'stairs' ? (
+                      renderStairs(0, 0, el.width, el.height)
+                    ) : (
+                      <span className="text-center px-1 break-words">{el.name}</span>
+                    )}
                   </div>
                 ))}
               </div>

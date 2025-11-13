@@ -46,3 +46,11 @@
 - [x] Building selection and detail views
 - [x] Floor and room selection interface
 - [x] Interactive map with boundary restrictions
+
+
+## Fixes & Improvements
+- [x] Fix polygon editor integration - open editor on polygon click for admin
+- [x] Fix building view - show actual floor plan layout instead of just list
+- [x] Add stair visualization - make stairs look like actual stairs (diagonal pattern)
+- [ ] Persist building layouts to database
+- [x] Display saved layouts for users

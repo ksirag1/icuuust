@@ -1,12 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { CampusMap, BuildingMap } from '@/components/CampusMap';
+import { CampusMap } from '@/components/CampusMap';
 import { useAuthLocal } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 
 export default function Home() {
-  const [selectedBuilding, setSelectedBuilding] = useState<number | null>(null);
   const [, setLocation] = useLocation();
   const { role, email, isLoading, isAdmin, logout } = useAuthLocal();
 
@@ -55,26 +54,7 @@ export default function Home() {
 
       {/* Main Content */}
       <div className="flex-1">
-        {selectedBuilding === null ? (
-          <div className="w-full h-full flex flex-col">
-            <div className="bg-white border-b p-4 shadow-sm">
-              <p className="text-sm text-gray-600">
-                {isAdmin
-                  ? 'Click on a building to edit its layout or view details'
-                  : 'Click on a building to view its rooms and details'}
-              </p>
-            </div>
-            <div className="flex-1">
-              <CampusMap onBuildingSelect={setSelectedBuilding} />
-            </div>
-          </div>
-        ) : (
-          <BuildingMap
-            buildingId={selectedBuilding}
-            onBack={() => setSelectedBuilding(null)}
-            isAdmin={isAdmin}
-          />
-        )}
+        <CampusMap isAdmin={isAdmin} />
       </div>
     </div>
   );
