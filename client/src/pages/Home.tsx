@@ -1,33 +1,26 @@
-import { useAuth } from "@/_core/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
-import { Streamdown } from 'streamdown';
+import { useState } from 'react';
+import { CampusMap, BuildingMap } from '@/components/CampusMap';
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
- */
 export default function Home() {
-  // The userAuth hooks provides authentication state
-  // To implement login/logout functionality, simply call logout() or redirect to getLoginUrl()
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
-
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
-
-  // Use APP_LOGO (as image src) and APP_TITLE if needed
+  const [selectedBuilding, setSelectedBuilding] = useState<number | null>(null);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
+    <div className="w-screen h-screen bg-gray-100">
+      {selectedBuilding === null ? (
+        <div className="w-full h-full flex flex-col">
+          <div className="bg-white border-b p-4 shadow-sm">
+            <h1 className="text-2xl font-bold text-gray-800">UUST IUM Interactive Map</h1>
+            <p className="text-sm text-gray-600 mt-1">
+              Click on a building to view its details and rooms
+            </p>
+          </div>
+          <div className="flex-1">
+            <CampusMap onBuildingSelect={setSelectedBuilding} />
+          </div>
+        </div>
+      ) : (
+        <BuildingMap buildingId={selectedBuilding} onBack={() => setSelectedBuilding(null)} />
+      )}
     </div>
   );
 }
