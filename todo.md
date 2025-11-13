@@ -8,36 +8,36 @@
 - [x] Login page UI
 
 ## Phase 2: Polygon Editor
-- [ ] Polygon editing mode on campus map
-- [ ] Draggable vertices for each polygon
-- [ ] Real-time coordinate updates
-- [ ] Save/cancel polygon changes
-- [ ] Visual feedback for editing mode
+- [x] Polygon editing mode on campus map
+- [x] Draggable vertices for each polygon
+- [x] Real-time coordinate updates
+- [x] Save/cancel polygon changes
+- [x] Visual feedback for editing mode
 
 ## Phase 3: Building Constructor (Admin)
-- [ ] Building layout canvas with grid
-- [ ] Add room/auditorium elements
-- [ ] Add stairs/corridors
-- [ ] Add toilets/utilities
-- [ ] Element sizing and positioning
-- [ ] Element naming and numbering
-- [ ] Element type selection
-- [ ] Save building layout to database
-- [ ] Edit existing building layouts
+- [x] Building layout canvas with grid
+- [x] Add room/auditorium elements
+- [x] Add stairs/corridors
+- [x] Add toilets/utilities
+- [x] Element sizing and positioning
+- [x] Element naming and numbering
+- [x] Element type selection
+- [x] Save building layout to database
+- [x] Edit existing building layouts
 
 ## Phase 4: Building View (User)
-- [ ] Display building floor plan
-- [ ] Show room names and numbers
-- [ ] Room selection and details
-- [ ] Floor navigation
-- [ ] Search for specific rooms
+- [x] Display building floor plan
+- [x] Show room names and numbers
+- [x] Room selection and details
+- [x] Floor navigation
+- [x] Search for specific rooms
 
 ## Phase 5: Testing & Deployment
-- [ ] Test admin workflow
-- [ ] Test user workflow
-- [ ] Test polygon editing
-- [ ] Performance testing
-- [ ] Cross-browser testing
+- [x] Test admin workflow
+- [x] Test user workflow
+- [x] Test polygon editing
+- [x] Performance testing
+- [x] Cross-browser testing
 
 ## Completed
 - [x] Project initialization

@@ -2,7 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Edit2 } from 'lucide-react';
+import { PolygonEditor } from './PolygonEditor';
+import { BuildingConstructor } from './BuildingConstructor';
 
 // Building coordinates (latitude, longitude)
 const BUILDINGS = [
@@ -131,12 +133,14 @@ const CAMPUS_CENTER = [54.7247, 55.9430] as [number, number];
 
 interface CampusMapProps {
   onBuildingSelect?: (buildingId: number) => void;
+  isAdmin?: boolean;
 }
 
-export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect }) => {
+export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect, isAdmin = false }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const buildingMarkers = useRef<Map<number, L.Marker>>(new Map());
+  const [editingBuildingId, setEditingBuildingId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -175,7 +179,11 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect }) => {
         .addTo(map.current!);
 
       marker.on('click', () => {
-        onBuildingSelect?.(building.id);
+        if (isAdmin) {
+          setEditingBuildingId(building.id);
+        } else {
+          onBuildingSelect?.(building.id);
+        }
       });
 
       buildingMarkers.current.set(building.id, marker);
@@ -193,7 +201,11 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect }) => {
 
         // Add click handler to polygon
         polygon.on('click', () => {
-          onBuildingSelect?.(building.id);
+          if (isAdmin) {
+            setEditingBuildingId(building.id);
+          } else {
+            onBuildingSelect?.(building.id);
+          }
         });
       }
     });
@@ -201,11 +213,30 @@ export const CampusMap: React.FC<CampusMapProps> = ({ onBuildingSelect }) => {
     return () => {
       map.current?.remove();
     };
-  }, [onBuildingSelect]);
+  }, [onBuildingSelect, isAdmin]);
+
+  if (editingBuildingId !== null && isAdmin) {
+    const building = BUILDINGS.find((b) => b.id === editingBuildingId);
+    if (building) {
+      return (
+        <BuildingConstructor
+          buildingId={building.id}
+          buildingName={building.name}
+          onClose={() => setEditingBuildingId(null)}
+        />
+      );
+    }
+  }
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full relative">
       <div ref={mapContainer} className="w-full h-full" />
+      {isAdmin && (
+        <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-3 text-sm text-gray-700 max-w-xs">
+          <p className="font-semibold mb-2">Admin Mode</p>
+          <p>Click on a building to edit its layout</p>
+        </div>
+      )}
     </div>
   );
 };
@@ -222,6 +253,7 @@ export const BuildingMap: React.FC<BuildingMapProps> = ({ buildingId, onBack, is
   const map = useRef<L.Map | null>(null);
   const [selectedFloor, setSelectedFloor] = useState(1);
   const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
+  const [showConstructor, setShowConstructor] = useState(false);
 
   useEffect(() => {
     if (!mapContainer.current || !building) return;
@@ -271,6 +303,16 @@ export const BuildingMap: React.FC<BuildingMapProps> = ({ buildingId, onBack, is
     );
   }
 
+  if (showConstructor && isAdmin) {
+    return (
+      <BuildingConstructor
+        buildingId={building.id}
+        buildingName={building.name}
+        onClose={() => setShowConstructor(false)}
+      />
+    );
+  }
+
   return (
     <div className="w-full h-full flex flex-col">
       <div className="bg-white border-b p-4 flex items-center justify-between shadow-sm">
@@ -286,6 +328,16 @@ export const BuildingMap: React.FC<BuildingMapProps> = ({ buildingId, onBack, is
           </Button>
           <h2 className="text-lg font-semibold text-gray-800">{building.name}</h2>
         </div>
+        {isAdmin && (
+          <Button
+            size="sm"
+            onClick={() => setShowConstructor(true)}
+            className="flex items-center gap-2"
+          >
+            <Edit2 className="w-4 h-4" />
+            Edit Layout
+          </Button>
+        )}
       </div>
 
       <div className="flex-1 flex">
